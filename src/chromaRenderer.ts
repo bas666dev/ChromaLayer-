@@ -1,6 +1,20 @@
-import { ChromaHue, DEFAULT_21_HUE_PALETTE, getHueById } from "./chromaPalette";
+import {
+  AeonPhase,
+  ChromaHue,
+  ChromaHueId,
+  DEFAULT_21_HUE_PALETTE,
+  getHueById,
+  getPhaseEntry
+} from "./chromaPalette";
 
 export type ChromatextMode = "inline" | "block" | "scroll";
+
+export interface ChromaAnimationOptions {
+  enabled?: boolean;
+  pulseSpeedMs?: number;
+  hueShiftDeg?: number;
+  brightnessAmplitude?: number;
+}
 
 export interface ChromatextOptions {
   mode?: ChromatextMode;
@@ -8,6 +22,8 @@ export interface ChromatextOptions {
   cycleByWord?: boolean; // if true: words cycle through palette
   includeBackground?: boolean;
   fontFamily?: string;
+  phase?: AeonPhase;
+  animation?: ChromaAnimationOptions;
 }
 
 /**
@@ -41,12 +57,29 @@ export function renderChromatext(
     baseHueId = 1,
     cycleByWord = true,
     includeBackground = true,
-    fontFamily = "'EB Garamond',serif"
+    fontFamily = "'EB Garamond',serif",
+    phase,
+    animation
   } = options;
 
   const palette = DEFAULT_21_HUE_PALETTE;
+  const phaseEntry = phase ? getPhaseEntry(phase) : undefined;
+  const resolvedBaseHueId = (phaseEntry?.hueId ?? baseHueId) as ChromaHueId;
+  const animationEnabled = !!animation?.enabled && mode !== "inline";
+  const animationVars = animationEnabled
+    ? `--chroma-pulse-speed:${animation.pulseSpeedMs ?? 4200}ms;` +
+      `--chroma-hue-shift:${animation.hueShiftDeg ?? 24}deg;` +
+      `--chroma-brightness-amp:${animation.brightnessAmplitude ?? 0.12};`
+    : "";
+  const animationStyleTag = animationEnabled
+    ? `<style data-chromatext-animation="true">
+@keyframes chroma-hue-pulse {0%{filter:hue-rotate(0deg) brightness(1);}50%{filter:hue-rotate(var(--chroma-hue-shift,24deg)) brightness(calc(1 + var(--chroma-brightness-amp,0.12)));}100%{filter:hue-rotate(0deg) brightness(1);}}
+@keyframes chroma-soft-glow {0%{text-shadow:0 0 8px currentColor;}50%{text-shadow:0 0 14px currentColor;}100%{text-shadow:0 0 8px currentColor;}}
+.aeon-block.chroma-animated span,.aeon-scroll.chroma-animated span{animation:chroma-hue-pulse var(--chroma-pulse-speed,4200ms) ease-in-out infinite,chroma-soft-glow calc(var(--chroma-pulse-speed,4200ms)*0.9) ease-in-out infinite;will-change:filter,text-shadow;}
+</style>`
+    : "";
   const parts = splitWordsAndSpaces(text);
-  let colorIndex = (baseHueId - 1 + palette.length) % palette.length;
+  let colorIndex = (resolvedBaseHueId - 1 + palette.length) % palette.length;
 
   const innerHTML = parts
     .map(part => {
@@ -55,11 +88,15 @@ export function renderChromatext(
 
       const hue: ChromaHue = cycleByWord
         ? palette[colorIndex++ % palette.length]
-        : getHueById(baseHueId as any);
+        : getHueById(resolvedBaseHueId);
 
       const fg = hue.foreground;
       const style = `color:${fg}; text-shadow:0 0 8px ${fg}66;`;
-      return `<span data-hue="${hue.id}" data-huename="${hue.name}" style="${style}">${escapeHtml(part)}</span>`;
+      const phaseAttrs = phase
+        ? ` data-phase="${phase}" data-phase-label="${phaseEntry?.label || ""}"`
+        : "";
+      const animClass = animationEnabled ? " class=\"chroma-animated-span\"" : "";
+      return `<span${animClass} data-hue="${hue.id}" data-huename="${hue.name}"${phaseAttrs} style="${style}">${escapeHtml(part)}</span>`;
     })
     .join("");
 
@@ -68,27 +105,35 @@ export function renderChromatext(
       ? "background:radial-gradient(circle at 50% 58%,#05050c 0%,#140d23 40%,#05050c 100%);"
       : "";
 
-  const blockStyle = [
-    `font-family:${fontFamily}`,
-    "padding:1.8em",
-    "border-radius:1.4em",
-    "line-height:1.9",
-    "letter-spacing:.04em",
-    "box-shadow:inset 0 0 40px #FFD16633,0 0 35px #43E97B22,0 0 26px #9B5DE544",
-    "color:#f5f5ff",
-    "text-align:left"
-  ].join(";");
+  const blockStyle =
+    [
+      `font-family:${fontFamily}`,
+      "padding:1.8em",
+      "border-radius:1.4em",
+      "line-height:1.9",
+      "letter-spacing:.04em",
+      "box-shadow:inset 0 0 40px #FFD16633,0 0 35px #43E97B22,0 0 26px #9B5DE544",
+      "color:#f5f5ff",
+      "text-align:left"
+    ]
+      .map(rule => `${rule};`)
+      .join("");
+
+  const phaseAttr = phase ? ` data-phase="${phase}" data-phase-label="${phaseEntry?.label || ""}"` : "";
+  const phaseTitle = phaseEntry?.description ? ` data-phase-desc="${phaseEntry.description}"` : "";
 
   if (mode === "inline") {
-    return `<span style="font-family:${fontFamily};">${innerHTML}</span>`;
+    return `<span style="font-family:${fontFamily};"${phaseAttr}${phaseTitle}>${innerHTML}</span>`;
   }
 
   if (mode === "scroll") {
-    return `<div class="aeon-scroll" style="${baseBg}${blockStyle}">${innerHTML}</div>`;
+    const classes = animationEnabled ? "aeon-scroll chroma-animated" : "aeon-scroll";
+    return `${animationStyleTag}<div class="${classes}" style="${baseBg}${blockStyle}${animationVars}"${phaseAttr}${phaseTitle}>${innerHTML}</div>`;
   }
 
   // default: block
-  return `<div class="aeon-block" style="${baseBg}${blockStyle}">${innerHTML}</div>`;
+  const classes = animationEnabled ? "aeon-block chroma-animated" : "aeon-block";
+  return `${animationStyleTag}<div class="${classes}" style="${baseBg}${blockStyle}${animationVars}"${phaseAttr}${phaseTitle}>${innerHTML}</div>`;
 }
 
 function escapeHtml(text: string): string {
