@@ -1,0 +1,26 @@
+{
+  "name": "@aeon/aeon-chromalayer-integration",
+  "version": "0.1.0",
+  "description": "Chromatic text + SVG braille integration layer for Æon / Æon-Ourobouros / Æon-Nexus / ChromaLayer.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "demo": "ts-node examples/node-basic.ts"
+  },
+  "keywords": [
+    "aeon",
+    "chromatext",
+    "colored-text",
+    "svg",
+    "braille",
+    "llm-integration"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  }
+}
