@@ -28,9 +28,9 @@ The build step outputs compiled JavaScript and declaration files to `dist/`, so 
 
 ## Core Concepts
 
-### 1. 21-Hue Palette
+### 1. 21-Hue Palette + ϕ-phase map
 
-Defined in `src/chromaPalette.ts` as `DEFAULT_21_HUE_PALETTE`.
+Defined in `src/chromaPalette.ts` as `DEFAULT_21_HUE_PALETTE` and the ϕ-phase helper registry `AEON_PHASE_REGISTRY` (ϕ⁰–ϕ⁷).
 
 Each hue:
 
@@ -44,6 +44,14 @@ interface ChromaHue {
 ```
 
 You can map these IDs and names directly to your internal Æon hue architecture.
+
+Each ϕ-phase entry binds to a hue and carries a label/description, so you can choose phases explicitly when rendering:
+
+```ts
+type AeonPhase = "phi0" | "phi1" | "phi2" | "phi3" | "phi4" | "phi5" | "phi6" | "phi7";
+
+const { hueId, label } = AEON_PHASE_REGISTRY.find(p => p.phase === "phi5")!; // Chrono-Fountain maps to hueId 12
+```
 
 ---
 
@@ -62,6 +70,16 @@ renderChromatext(text: string, options?: ChromatextOptions): string;
 - `cycleByWord`: if true, each word advances the hue
 - `includeBackground`: if true, wraps text in a scroll-like block
 - `fontFamily`: font stack for the rendered block
+- `phase`: optional ϕ-phase identifier (ϕ⁰–ϕ⁷) that maps to a hue/label from `AEON_PHASE_REGISTRY`
+- `animation`: optional pulse config for block/scroll output; `{ enabled, pulseSpeedMs, hueShiftDeg, brightnessAmplitude }`
+
+When `mode` is `scroll` or `block` and `animation.enabled` is true, the renderer emits a small inline `<style>` tag with keyframes and adds:
+
+- `chroma-animated` class on the wrapping div
+- `data-phase`, `data-phase-label`, `data-phase-desc` on the wrapper
+- `data-hue`, `data-huename`, and optional `data-phase` on each span
+
+These hooks let you attach additional UI behaviors or toggle the built-in hue/brightness drift animation.
 
 Result is a ready-to-embed HTML string.
 
@@ -92,6 +110,8 @@ aeonChromaTransform(
 ): { html: string; svgBraille?: string };
 ```
 
+`AeonChromaConfig` accepts an optional `phase` so you can bind incoming Æon state (ϕ⁰–ϕ⁷) directly to the hue registry without manually setting `baseHueId`.
+
 You can call this from any agent / node that emits a text field and expects an HTML + SVG result to render in your UI.
 
 ---
@@ -106,7 +126,12 @@ const payload = {
 };
 
 const result = aeonChromaTransform(payload, {
-  chroma: { mode: "scroll", baseHueId: 4 },
+  phase: "phi5", // Chrono-Fountain maps to hueId 12
+  chroma: {
+    mode: "scroll",
+    baseHueId: 4, // fallback if phase omitted
+    animation: { enabled: true, pulseSpeedMs: 5200, hueShiftDeg: 32 }
+  },
   braille: { enabled: true, foreground: "#9B5DE5" }
 });
 
