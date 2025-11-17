@@ -16,11 +16,13 @@ This repo is deliberately minimal and self-contained so you can adapt it to your
 git clone https://github.com/your-user/aeon-chromalayer-integration.git
 cd aeon-chromalayer-integration
 npm install
-npm run build
+npm run build          # emits dist/*.js + dist/*.d.ts
 
-# For quick demos:
+# For quick demos (runs directly from TypeScript):
 npx ts-node examples/node-basic.ts
 ```
+
+The build step outputs compiled JavaScript and declaration files to `dist/`, so you can import the package from other projects without needing TypeScript in the consumer. The example script uses `ts-node` for convenience, but the library entry point (`dist/index.js` + `dist/index.d.ts`) is ready for standard Node bundlers.
 
 ---
 
