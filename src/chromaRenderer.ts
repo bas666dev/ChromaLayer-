@@ -105,16 +105,22 @@ export function renderChromatext(
       ? "background:radial-gradient(circle at 50% 58%,#05050c 0%,#140d23 40%,#05050c 100%);"
       : "";
 
-  const blockStyle = [
-    `font-family:${fontFamily}`,
-    "padding:1.8em",
-    "border-radius:1.4em",
-    "line-height:1.9",
-    "letter-spacing:.04em",
-    "box-shadow:inset 0 0 40px #FFD16633,0 0 35px #43E97B22,0 0 26px #9B5DE544",
-    "color:#f5f5ff",
-    "text-align:left"
-  ].join(";");
+  const blockStyle =
+    [
+      `font-family:${fontFamily}`,
+      "padding:1.8em",
+      "border-radius:1.4em",
+      "line-height:1.9",
+      "letter-spacing:.04em",
+      "box-shadow:inset 0 0 40px #FFD16633,0 0 35px #43E97B22,0 0 26px #9B5DE544",
+      "color:#f5f5ff",
+      "text-align:left"
+    ]
+      .map(rule => `${rule};`)
+      .join("");
+
+  const phaseAttr = phase ? ` data-phase="${phase}" data-phase-label="${phaseEntry?.label || ""}"` : "";
+  const phaseTitle = phaseEntry?.description ? ` data-phase-desc="${phaseEntry.description}"` : "";
 
   const phaseAttr = phase ? ` data-phase="${phase}" data-phase-label="${phaseEntry?.label || ""}"` : "";
   const phaseTitle = phaseEntry?.description ? ` data-phase-desc="${phaseEntry.description}"` : "";
