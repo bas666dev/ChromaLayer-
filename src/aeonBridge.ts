@@ -13,6 +13,7 @@ export interface AeonChromaResult {
 
 export interface AeonChromaConfig {
   chroma?: ChromatextOptions;
+  phase?: ChromatextOptions["phase"];
   braille?: BrailleOptions & { enabled?: boolean };
 }
 
@@ -24,12 +25,14 @@ export function aeonChromaTransform(
   payload: AeonChromaPayload,
   config: AeonChromaConfig = {}
 ): AeonChromaResult {
+  const phase = config.phase ?? config.chroma?.phase;
   const html = renderChromatext(payload.text, {
     mode: "scroll",
     baseHueId: 1,
     cycleByWord: true,
     includeBackground: true,
-    ...config.chroma
+    ...config.chroma,
+    phase
   });
 
   const svgBraille = config.braille?.enabled

@@ -28,6 +28,23 @@ export interface ChromaHue {
   background: string;
 }
 
+export type AeonPhase =
+  | "phi0"
+  | "phi1"
+  | "phi2"
+  | "phi3"
+  | "phi4"
+  | "phi5"
+  | "phi6"
+  | "phi7";
+
+export interface AeonPhaseEntry {
+  phase: AeonPhase;
+  label: string;
+  hueId: ChromaHueId;
+  description: string;
+}
+
 export const DEFAULT_21_HUE_PALETTE: ChromaHue[] = [
   { id: 1, name: "solar-gold", foreground: "#FFD166", background: "#140D23" },
   { id: 2, name: "verdant-green", foreground: "#43E97B", background: "#050913" },
@@ -52,6 +69,57 @@ export const DEFAULT_21_HUE_PALETTE: ChromaHue[] = [
   { id: 21, name: "crown-white", foreground: "#FFFFFF", background: "#06040A" }
 ];
 
+export const AEON_PHASE_REGISTRY: AeonPhaseEntry[] = [
+  {
+    phase: "phi0",
+    label: "Origin Seed",
+    hueId: 1,
+    description: "Initial bloom / ignition phase"
+  },
+  {
+    phase: "phi1",
+    label: "Verdant Walk",
+    hueId: 2,
+    description: "Growth-forward stepping tone"
+  },
+  {
+    phase: "phi2",
+    label: "Ember Stride",
+    hueId: 5,
+    description: "Accelerated motion / heat"
+  },
+  {
+    phase: "phi3",
+    label: "Crown Resonance",
+    hueId: 4,
+    description: "Resonant recursion loop"
+  },
+  {
+    phase: "phi4",
+    label: "Spindle Mirror",
+    hueId: 10,
+    description: "Mirrored recursion; folds perception inward"
+  },
+  {
+    phase: "phi5",
+    label: "Chrono-Fountain",
+    hueId: 12,
+    description: "Probabilistic cascades; emits potential events"
+  },
+  {
+    phase: "phi6",
+    label: "Lattice Echo",
+    hueId: 17,
+    description: "Historical resonance and memory recall"
+  },
+  {
+    phase: "phi7",
+    label: "Silence-Vector",
+    hueId: 21,
+    description: "Harmonic fade / ritual closure"
+  }
+];
+
 export function getHueById(id: ChromaHueId): ChromaHue {
   const hue = DEFAULT_21_HUE_PALETTE.find(h => h.id === id);
   if (!hue) throw new Error(`Unknown hue id: ${id}`);
@@ -60,4 +128,17 @@ export function getHueById(id: ChromaHueId): ChromaHue {
 
 export function getHueByName(name: string): ChromaHue | undefined {
   return DEFAULT_21_HUE_PALETTE.find(h => h.name === name);
+}
+
+export function getPhaseEntry(phase: AeonPhase): AeonPhaseEntry {
+  const entry = AEON_PHASE_REGISTRY.find(p => p.phase === phase);
+  if (!entry) {
+    throw new Error(`Unknown phase: ${phase}`);
+  }
+  return entry;
+}
+
+export function getHueForPhase(phase: AeonPhase): ChromaHue {
+  const entry = getPhaseEntry(phase);
+  return getHueById(entry.hueId);
 }
